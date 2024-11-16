@@ -1,11 +1,50 @@
+require('dotenv').config();  // Load environment variables
+
 const fs = require("fs");
 const path = require("path");
-
+const axios = require("axios");
 const { validationResult } = require("express-validator");
 
 const io = require("../socket");
 const Post = require("../models/post");
 const User = require("../models/user");
+
+const IMGUR_CLIENT_ID = process.env.IMGUR_CLIENT_ID; 
+
+// Function to upload image to Imgur
+const uploadImageToImgur = async (imagePath) => {
+  try {
+    console.log("Reading image from path:", imagePath);  // Log image path
+    const image = fs.readFileSync(imagePath, { encoding: 'base64' });  // Read the file as base64
+    console.log("Image read successfully.");
+
+    // Uploading to Imgur
+    const response = await axios.post('https://api.imgur.com/3/upload', {
+      image: image,  // Send the base64 image directly
+      type: 'base64'  // Specify that the image is base64 encoded
+    }, {
+      headers: {
+        'Authorization': `Client-ID ${IMGUR_CLIENT_ID}`,
+        'Content-Type': 'application/json',  // Change content type to json
+      },
+    });
+
+    console.log("Imgur Response:", response.data);  // Log the full response from Imgur
+
+    if (response.data && response.data.data && response.data.data.link) {
+      console.log("Image uploaded successfully. URL:", response.data.data.link);
+      return response.data.data.link;  // Return the Imgur image URL
+    } else {
+      throw new Error("Imgur API did not return a valid link.");
+    }
+  } catch (error) {
+    console.error("Error uploading image to Imgur:", error.message);
+    if (error.response) {
+      console.error("Imgur API Response:", error.response.data);  // Log detailed response if available
+    }
+    throw new Error("Error uploading image to Imgur");
+  }
+};
 
 exports.getPosts = async (req, res, next) => {
   const currentPage = req.query.page || 1;
@@ -63,16 +102,23 @@ exports.createPost = async (req, res, next) => {
     error.statusCode = 422;
     throw error;
   }
-  const imageUrl = req.file.path.replace("\\", "/");
-  const title = req.body.title;
-  const content = req.body.content;
-  const post = new Post({
-    title: title,
-    content: content,
-    imageUrl: imageUrl,
-    creator: req.userId,
-  });
+
+  // Log the file path before attempting to upload
+  console.log("Uploading image from file path:", req.file.path);
+
   try {
+    // Upload image to Imgur
+    const imageUrl = await uploadImageToImgur(req.file.path);  // Use the upload function
+    const title = req.body.title;
+    const content = req.body.content;
+
+    const post = new Post({
+      title: title,
+      content: content,
+      imageUrl: imageUrl,  // Save the Imgur URL
+      creator: req.userId,
+    });
+
     await post.save();
     const user = await User.findById(req.userId);
     user.posts.push(post);
@@ -88,6 +134,7 @@ exports.createPost = async (req, res, next) => {
     });
     return savedUser;
   } catch (err) {
+    console.error("Error creating post:", err.message);  // Log any error that occurs
     if (!err.statusCode) {
       err.statusCode = 500;
     }
@@ -124,14 +171,7 @@ exports.updatePost = async (req, res, next) => {
   const title = req.body.title;
   const content = req.body.content;
   let imageUrl = req.body.image;
-  if (req.file) {
-    imageUrl = req.file.path.replace("\\", "/");
-  }
-  if (!imageUrl) {
-    const error = new Error("No file picked.");
-    error.statusCode = 422;
-    throw error;
-  }
+
   try {
     const post = await Post.findById(postId).populate("creator");
     if (!post) {
@@ -144,9 +184,22 @@ exports.updatePost = async (req, res, next) => {
       error.statusCode = 403;
       throw error;
     }
-    if (imageUrl !== post.imageUrl) {
-      clearImage(post.imageUrl);
+
+    if (req.file) {
+      // Upload new image to Imgur
+      imageUrl = await uploadImageToImgur(req.file.path);
+      // Delete old image if it exists and is different
+      if (post.imageUrl && post.imageUrl !== imageUrl) {
+        clearImage(post.imageUrl);
+      }
     }
+
+    if (!imageUrl) {
+      const error = new Error("No file picked.");
+      error.statusCode = 422;
+      throw error;
+    }
+
     post.title = title;
     post.imageUrl = imageUrl;
     post.content = content;
@@ -194,7 +247,6 @@ exports.deletePost = async (req, res, next) => {
 };
 
 const clearImage = (filePath) => {
-  filePath = path.join(__dirname, "..", filePath);
   fs.unlink(filePath, (err) => {
     if (err) console.log(err);
   });
