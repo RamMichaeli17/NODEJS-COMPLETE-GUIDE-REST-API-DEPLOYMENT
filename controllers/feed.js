@@ -1,54 +1,51 @@
-require('dotenv').config();  // Load environment variables
+require('dotenv').config(); // Load environment variables
 
 const fs = require("fs");
 const path = require("path");
 const axios = require("axios");
 const { validationResult } = require("express-validator");
+const FormData = require('form-data'); // Added to handle multipart form data
 
 const io = require("../socket");
 const Post = require("../models/post");
 const User = require("../models/user");
 
-const IMGUR_CLIENT_ID = process.env.IMGUR_CLIENT_ID; 
+const IMAGEBB_API_KEY = process.env.IMAGEBB_API_KEY;
 
-// Function to upload image to Imgur
-const uploadImageToImgur = async (imagePath) => {
+// Function to upload image to ImageBB
+const uploadImageToImageBB = async (imagePath) => {
   try {
-    console.log("Reading image from path:", imagePath);  // Log image path
-    const image = fs.readFileSync(imagePath, { encoding: 'base64' });  // Read the file as base64
-    console.log("Image read successfully.");
+    console.log("Reading image from path:", imagePath);
 
-    // Uploading to Imgur
-    const response = await axios.post('https://api.imgur.com/3/upload', {
-      image: image,  // Send the base64 image directly
-      type: 'base64'  // Specify that the image is base64 encoded
-    }, {
-      headers: {
-        'Authorization': `Client-ID ${IMGUR_CLIENT_ID}`,
-        'Content-Type': 'application/json',  // Change content type to json
-      },
-    });
+    // Create a FormData instance to upload the image as multipart/form-data
+    const form = new FormData();
+    form.append('image', fs.createReadStream(imagePath)); 
+    // Post the form to the ImageBB API
+    const response = await axios.post(
+      `https://api.imgbb.com/1/upload?key=${IMAGEBB_API_KEY}`,
+      form,
+      { headers: form.getHeaders() } // Set headers to multipart form data
+    );
 
-    console.log("Imgur Response:", response.data);  // Log the full response from Imgur
-
-    if (response.data && response.data.data && response.data.data.link) {
-      console.log("Image uploaded successfully. URL:", response.data.data.link);
-      return response.data.data.link;  // Return the Imgur image URL
+    // Check for successful response
+    if (response.data && response.data.data && response.data.data.url) {
+      return response.data.data.url;
     } else {
-      throw new Error("Imgur API did not return a valid link.");
+      throw new Error("ImageBB API did not return a valid URL.");
     }
   } catch (error) {
-    console.error("Error uploading image to Imgur:", error.message);
+    console.error("Error uploading image to ImageBB:", error.message);
     if (error.response) {
-      console.error("Imgur API Response:", error.response.data);  // Log detailed response if available
+      console.error("ImageBB API Response:", error.response.data);
     }
-    throw new Error("Error uploading image to Imgur");
+    throw new Error("Error uploading image to ImageBB");
   }
 };
 
 exports.getPosts = async (req, res, next) => {
   const currentPage = req.query.page || 1;
   const perPage = 2;
+
   try {
     const totalItems = await Post.find().countDocuments();
     const posts = await Post.find()
@@ -68,26 +65,6 @@ exports.getPosts = async (req, res, next) => {
     }
     next(err);
   }
-  // .countDocuments()
-  // .then((count) => {
-  //   totalItems = count;
-  //   return Post.find()
-  //     .skip((currentPage - 1) * perPage)
-  //     .limit(perPage);
-  // })
-  // .then((posts) => {
-  //   res.status(200).json({
-  //     message: "Fetched posts successfully.",
-  //     posts: posts,
-  //     totalItems: totalItems,
-  //   });
-  // })
-  // .catch((err) => {
-  //   if (!err.statusCode) {
-  //     err.statusCode = 500;
-  //   }
-  //   next(err);
-  // });
 };
 
 exports.createPost = async (req, res, next) => {
@@ -97,44 +74,41 @@ exports.createPost = async (req, res, next) => {
     error.statusCode = 422;
     throw error;
   }
+
   if (!req.file) {
     const error = new Error("No image provided.");
     error.statusCode = 422;
     throw error;
   }
 
-  // Log the file path before attempting to upload
-  console.log("Uploading image from file path:", req.file.path);
-
   try {
-    // Upload image to Imgur
-    const imageUrl = await uploadImageToImgur(req.file.path);  // Use the upload function
+    const imageUrl = await uploadImageToImageBB(req.file.path);
     const title = req.body.title;
     const content = req.body.content;
 
     const post = new Post({
-      title: title,
-      content: content,
-      imageUrl: imageUrl,  // Save the Imgur URL
+      title,
+      content,
+      imageUrl,
       creator: req.userId,
     });
 
     await post.save();
     const user = await User.findById(req.userId);
     user.posts.push(post);
-    const savedUser = await user.save();
+    await user.save();
+
     io.getIO().emit("posts", {
       action: "create",
       post: { ...post._doc, creator: { _id: req.userId, name: user.name } },
     });
+
     res.status(201).json({
       message: "Post created successfully!",
-      post: post,
+      post,
       creator: { _id: user._id, name: user.name },
     });
-    return savedUser;
   } catch (err) {
-    console.error("Error creating post:", err.message);  // Log any error that occurs
     if (!err.statusCode) {
       err.statusCode = 500;
     }
@@ -144,14 +118,15 @@ exports.createPost = async (req, res, next) => {
 
 exports.getPost = async (req, res, next) => {
   const postId = req.params.postId;
-  const post = await Post.findById(postId);
+
   try {
+    const post = await Post.findById(postId).populate("creator");
     if (!post) {
       const error = new Error("Could not find post.");
       error.statusCode = 404;
       throw error;
     }
-    res.status(200).json({ message: "Post fetched.", post: post });
+    res.status(200).json({ message: "Post fetched.", post });
   } catch (err) {
     if (!err.statusCode) {
       err.statusCode = 500;
@@ -163,14 +138,26 @@ exports.getPost = async (req, res, next) => {
 exports.updatePost = async (req, res, next) => {
   const postId = req.params.postId;
   const errors = validationResult(req);
+
   if (!errors.isEmpty()) {
     const error = new Error("Validation failed, entered data is incorrect.");
     error.statusCode = 422;
     throw error;
   }
+
   const title = req.body.title;
   const content = req.body.content;
   let imageUrl = req.body.image;
+
+  if (req.file) {
+    imageUrl = await uploadImageToImageBB(req.file.path);
+  }
+
+  if (!imageUrl) {
+    const error = new Error("No image provided.");
+    error.statusCode = 422;
+    throw error;
+  }
 
   try {
     const post = await Post.findById(postId).populate("creator");
@@ -179,30 +166,17 @@ exports.updatePost = async (req, res, next) => {
       error.statusCode = 404;
       throw error;
     }
+
     if (post.creator._id.toString() !== req.userId) {
-      const error = new Error("Not authorized!");
+      const error = new Error("Not authorized.");
       error.statusCode = 403;
       throw error;
     }
 
-    if (req.file) {
-      // Upload new image to Imgur
-      imageUrl = await uploadImageToImgur(req.file.path);
-      // Delete old image if it exists and is different
-      if (post.imageUrl && post.imageUrl !== imageUrl) {
-        clearImage(post.imageUrl);
-      }
-    }
-
-    if (!imageUrl) {
-      const error = new Error("No file picked.");
-      error.statusCode = 422;
-      throw error;
-    }
-
     post.title = title;
-    post.imageUrl = imageUrl;
     post.content = content;
+    post.imageUrl = imageUrl;
+
     const result = await post.save();
     io.getIO().emit("posts", { action: "update", post: result });
     res.status(200).json({ message: "Post updated!", post: result });
@@ -216,26 +190,26 @@ exports.updatePost = async (req, res, next) => {
 
 exports.deletePost = async (req, res, next) => {
   const postId = req.params.postId;
+
   try {
     const post = await Post.findById(postId);
-
     if (!post) {
       const error = new Error("Could not find post.");
       error.statusCode = 404;
       throw error;
     }
+
     if (post.creator.toString() !== req.userId) {
-      const error = new Error("Not authorized!");
+      const error = new Error("Not authorized.");
       error.statusCode = 403;
       throw error;
     }
-    // Check logged in user
-    clearImage(post.imageUrl);
-    await Post.findByIdAndDelete(postId);
 
+    await Post.findByIdAndDelete(postId);
     const user = await User.findById(req.userId);
     user.posts.pull(postId);
     await user.save();
+
     io.getIO().emit("posts", { action: "delete", post: postId });
     res.status(200).json({ message: "Deleted post." });
   } catch (err) {
@@ -244,10 +218,4 @@ exports.deletePost = async (req, res, next) => {
     }
     next(err);
   }
-};
-
-const clearImage = (filePath) => {
-  fs.unlink(filePath, (err) => {
-    if (err) console.log(err);
-  });
 };
