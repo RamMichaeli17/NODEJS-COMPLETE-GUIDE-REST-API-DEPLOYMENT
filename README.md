@@ -12,7 +12,7 @@
 <!-- PROJECT LOGO -->
 <br />
 <div align="center">
-  <a href="https://github.com/RamMichaeli17/NODEJS-COMPLETE-GUIDE-REST-API-DEPLOYMENT">
+  <a href="https://github.com/RamMichaeli17/Social-Blog">
     <img src="https://github.com/user-attachments/assets/5d83b603-c97d-45e5-83c5-2425f7206db2" alt="Logo" width="240" height="240">
   </a>
   <h3 align="center">Node.js REST API Social Network/Blog Application</h3>
@@ -21,10 +21,10 @@ This project is a full-featured social network and blog application built with <
     <br />
     <br />
     Visit the deployed backend application: 
-    <a href="https://nodejs-complete-guide-rest-api-deployment.onrender.com">Backend Deployment</a>
+    <a href="https://social-blog-fqhl.onrender.com">Backend Deployment</a>
     <br />
     Visit the deployed frontend application: 
-    <a href="https://nodejs-complete-guide-rest-api-frontend.onrender.com/">Frontend Deployment</a>
+    <a href="https://social-blog-web-q45d.onrender.com">Frontend Deployment</a>
     <br />
     <strong>Note:</strong> Due to free tier limitations, expect delays on first load due to app sleep mode.
     <br /><br />
@@ -53,7 +53,7 @@ This project is a full-featured social network and blog application built with <
 <!-- ABOUT THE PROJECT -->
 ## About The Project
 
-![image](https://github.com/user-attachments/assets/0032eb23-0989-4a6b-aa4a-870b3fcd6007)
+![image](https://github.com/user-attachments/assets/ba1dafb8-35f9-4adb-aa0e-0918495f4d09)
 
 
 This Node.js REST API Blog project simulates a functional social network and blog application where users can sign up and create posts. It covers the essential features of web development, including:
@@ -167,7 +167,7 @@ By completing this project, you will:
 ### Installation
 1. Clone the repository
 ```sh
-git clone https://github.com/RamMichaeli17/NODEJS-COMPLETE-GUIDE-REST-API-DEPLOYMENT.git
+git clone https://github.com/RamMichaeli17/Social-Blog.git
 ```
 2. Install NPM packages
 ```sh
@@ -244,7 +244,7 @@ Here's a breakdown of the steps involved in building the blog project:
 <p align="right">(<a href="#top">back to top</a>)</p>
 
 ## License
-Distributed under the MIT License. See [`LICENSE.txt`](https://github.com/RamMichaeli17/NODEJS-COMPLETE-GUIDE-REST-API-DEPLOYMENT/blob/main/LICENSE.txt) for more information.
+Distributed under the MIT License. See [`LICENSE.txt`](https://github.com/RamMichaeli17/Social-Blog/blob/main/LICENSE.txt) for more information.
 
 <p align="right">(<a href="#top">back to top</a>)</p>
 
@@ -271,7 +271,7 @@ Thanks to the following people who have contributed to this project:
 ## Contact
 Ram Michaeli - [ram153486@gmail.com](mailto:ram153486@gmail.com)
 
-Project Link: [https://github.com/RamMichaeli17/NODEJS-COMPLETE-GUIDE-REST-API-DEPLOYMENT](https://github.com/RamMichaeli17/NODEJS-COMPLETE-GUIDE-REST-API-DEPLOYMENT)
+Project Link: [https://github.com/RamMichaeli17/Social-Blog](https://github.com/RamMichaeli17/Social-Blog)
 
 <a href="mailto:ram153486@gmail.com"><img src="https://img.shields.io/twitter/url?label=Gmail%3A%20ram153486%40gmail.com&logo=gmail&style=social&url=https%3A%2F%2Fmailto%3Aram153486%40gmail.com"/></a>
 <a href="https://linkedin.com/in/ram-michaeli"><img src="https://img.shields.io/twitter/url?label=ram%20Michaeli&logo=linkedin&style=social&url=https%3A%2F%2Fmailto%3Aram153486%40gmail.com"/></a>
@@ -279,14 +279,14 @@ Project Link: [https://github.com/RamMichaeli17/NODEJS-COMPLETE-GUIDE-REST-API-D
 <p align="right">(<a href="#top">back to top</a>)</p>
 
 <!-- MARKDOWN LINKS & IMAGES -->
-[reposize-shield]: https://img.shields.io/github/repo-size/RamMichaeli17/NODEJS-COMPLETE-GUIDE-REST-API-DEPLOYMENT?style=for-the-badge
-[languagescount-shield]: https://img.shields.io/github/languages/count/RamMichaeli17/NODEJS-COMPLETE-GUIDE-REST-API-DEPLOYMENT?style=for-the-badge
-[contributors-shield]: https://img.shields.io/github/contributors/RamMichaeli17/NODEJS-COMPLETE-GUIDE-REST-API-DEPLOYMENT.svg?style=for-the-badge
-[contributors-url]: https://github.com/RamMichaeli17/NODEJS-COMPLETE-GUIDE-REST-API-DEPLOYMENT/graphs/contributors
-[stars-shield]: https://img.shields.io/github/stars/RamMichaeli17/NODEJS-COMPLETE-GUIDE-REST-API-DEPLOYMENT.svg?style=for-the-badge
-[stars-url]: https://github.com/RamMichaeli17/NODEJS-COMPLETE-GUIDE-REST-API-DEPLOYMENT/stargazers
-[license-shield]: https://img.shields.io/github/license/RamMichaeli17/NODEJS-COMPLETE-GUIDE-REST-API-DEPLOYMENT.svg?style=for-the-badge
-[license-url]: https://github.com/RamMichaeli17/NODEJS-COMPLETE-GUIDE-REST-API-DEPLOYMENT/blob/main/LICENSE.txt
+[reposize-shield]: https://img.shields.io/github/repo-size/RamMichaeli17/Social-Blog?style=for-the-badge
+[languagescount-shield]: https://img.shields.io/github/languages/count/RamMichaeli17/Social-Blog?style=for-the-badge
+[contributors-shield]: https://img.shields.io/github/contributors/RamMichaeli17/Social-Blog.svg?style=for-the-badge
+[contributors-url]: https://github.com/RamMichaeli17/Social-Blog/graphs/contributors
+[stars-shield]: https://img.shields.io/github/stars/RamMichaeli17/Social-Blog.svg?style=for-the-badge
+[stars-url]: https://github.com/RamMichaeli17/Social-Blog/stargazers
+[license-shield]: https://img.shields.io/github/license/RamMichaeli17/Social-Blog.svg?style=for-the-badge
+[license-url]: https://github.com/RamMichaeli17/Social-Blog/blob/main/LICENSE.txt
 [linkedin-shield]: https://img.shields.io/badge/linkedin-%230077B5.svg?style=for-the-badge&logo=linkedin&logoColor=white
 [linkedin-url]: https://linkedin.com/in/ram-michaeli
 [gmail-shield]: https://img.shields.io/badge/ram153486@gmail.com-D14836?style=for-the-badge&logo=gmail&logoColor=white
