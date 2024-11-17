@@ -1,7 +1,7 @@
 node_modules
-test
 access.log
 server.cert
 server.key
 .env
 nodemon.json
+test
